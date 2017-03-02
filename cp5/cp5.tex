@@ -1,0 +1,349 @@
+% !TEX TS-program = pdflatex
+% !TEX encoding = UTF-8 Unicode
+
+% This is a simple template for a LaTeX document using the "article" class.
+% See "book", "report", "letter" for other types of document.
+
+\documentclass[11pt]{article} % use larger type; default would be 10pt
+
+\usepackage[utf8]{inputenc} % set input encoding (not needed with XeLaTeX)
+
+%%% Examples of Article customizations
+% These packages are optional, depending whether you want the features they provide.
+% See the LaTeX Companion or other references for full information.
+
+%%% PAGE DIMENSIONS
+\usepackage{geometry} % to change the page dimensions
+\usepackage{braket}
+\geometry{a4paper} % or letterpaper (US) or a5paper or....
+% \geometry{margin=2in} % for example, change the margins to 2 inches all round
+% \geometry{landscape} % set up the page for landscape
+%   read geometry.pdf for detailed page layout information
+
+\usepackage{graphicx} % support the \includegraphics command and options
+
+\usepackage[parfill]{parskip} % Activate to begin paragraphs with an empty line rather than an indent
+
+%%% PACKAGES
+\usepackage{booktabs} % for much better looking tables
+\usepackage{array} % for better arrays (eg matrices) in maths
+\usepackage{paralist} % very flexible & customisable lists (eg. enumerate/itemize, etc.)
+\usepackage{verbatim} % adds environment for commenting out blocks of text & for better verbatim
+\usepackage{subfig} % make it possible to include more than one captioned figure/table in a single float
+% These packages are all incorporated in the memoir class to one degree or another...
+\usepackage{amsmath}
+%%% HEADERS & FOOTERS
+\usepackage{fancyhdr} % This should be set AFTER setting up the page geometry
+\pagestyle{fancy} % options: empty , plain , fancy
+\renewcommand{\headrulewidth}{0pt} % customise the layout...
+\lhead{}\chead{}\rhead{}
+\lfoot{}\cfoot{\thepage}\rfoot{}
+
+%%% SECTION TITLE APPEARANCE
+\usepackage{sectsty}
+\allsectionsfont{\sffamily\mdseries\upshape} % (See the fntguide.pdf for font help)
+% (This matches ConTeXt defaults)
+
+%%% ToC (table of contents) APPEARANCE
+\usepackage[nottoc,notlof,notlot]{tocbibind} % Put the bibliography in the ToC
+\usepackage[titles,subfigure]{tocloft} % Alter the style of the Table of Contents
+\renewcommand{\cftsecfont}{\rmfamily\mdseries\upshape}
+\renewcommand{\cftsecpagefont}{\rmfamily\mdseries\upshape} % No bold!
+
+%%% END Article customizations
+
+%%% The "real" document content comes below...
+
+\title{Physics 465: Computing Project 5}
+%\author{Steve Spicklemire}
+%\date{Aug. 7, 2011} % Activate to display a given date or no date (if empty),
+         % otherwise the current date is printed 
+
+\begin{document}
+\maketitle
+
+\section*{Free Particles and the Fourier Transform}
+
+This week's project is about following the behavior of a free particle using the Fourier Transform as a tool to change to the $k$ (or momentum) basis, evolve the time, then convert back to to the position basis to determine the new wavefunction. This requires the use of a new tool in python: The Fast Fourier Transform (FFT). The FFT is very closely related to the idea of a Fourier Transform (FT) described in your book. The FT is defined like so:
+
+\begin{equation}
+\phi(k) = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{+\infty} e^{-i k x} \psi(x) dx
+\label{eq:1}
+\end{equation}
+
+The Inverse Fourier Transform (IFT) is defined symmetrically:
+
+\begin{equation}
+\psi(x) = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{+\infty} e^{+i k x} \phi(k) dk
+\label{eq:2}
+\end{equation}
+
+The FT and IFT transform continuous wavefunctions from ``real space'' to ``k space'' (with the FT) and back again (using the IFT). For machine computing it's nice to be able to generalize these ideas to sampled wavefunctions such as those we've been using, where we're really just tracking discrete numbers at specific locations in space. In this context the wavefunction $\psi(x)$ becomes an array of sampled values $\psi_n$ and the transform $\phi(k)$ becomes a set of discrete values $\phi_k$:
+
+\begin{equation}
+\phi_k = \sum_{n=0}^N e^{-i n k 2 \pi/N} \psi_n
+\end{equation}
+
+Where $k \in \{0, 1, 2, \ldots, N-1\}$ Note the similarity with Eq.~\ref{eq:1}. The inverse transform is also similar:
+
+\begin{equation}
+\psi_n = \frac{1}{N}\sum_{k=0}^N e^{+i n k 2 \pi/N} \phi_k
+\end{equation}
+
+One point is that while the integrals (Eq.~\ref{eq:1} and Eq.~\ref{eq:2}) are over all space from $-\infty$ to $+\infty$, the corresponding sums are finite ranging from $0$ to $N$. One obvious question is ``What happened to the negative frequencies?''. The answer is subtle, and will become more clear when we get to Dirac notation in chapter 3. In the mean time notice that when $k$ is greater than $N/2$ the angle $2\pi k/N$ is greater than $\pi$. If you think about it, as you move through successive values of $n$, multiplying by a phasor with an angle greater than $\pi$ is exactly the same as multiplying by an negative phase! So.. the negative frequencies are just the terms where $k$ is greater than $N/2$.
+
+\subsection*{How do we compute the FFT in python?}
+
+Easy! Here is some sample code:
+
+\begin{verbatim}
+#-----------------------------------------------------------------------#
+
+NA=150                         # how many arrows?
+a=30.0                         # range of x is -a/2 to a/2 in units 
+                               # of $\sqrt{\hbar/m\omega}$
+x = linspace(-a/2, a/2, NA)    # NA locations from -a/2 to a/2
+kMin = 2*pi/a
+k0 = 10*kMin
+sigma = a/15.0
+psi=exp(1j*k0*x - ((x+3*a/8)/sigma)**2)   # gaussian wave packet
+psi = psi/sqrt((abs(psi)**2).sum())       # normalize
+
+alist = []
+for i in range(NA):
+    alist.append(arrow(pos=(x[i],0,0), color=color.red))
+    SetArrowFromCN(arrowScale*psi[i],alist[i])
+    
+phi0 = fft.fft(psi)  # Compute the FFT at t=0.
+
+#-----------------------------------------------------------------------#
+\end{verbatim}
+
+Note that the actual calculation of the FFT is the very last line only. Getting the FFT is easy! The inverse FFT is just as easy, except you'd say
+
+\begin{verbatim}
+psi = fft.ifft(phi)         # get the inverse FFT.
+\end{verbatim}
+
+
+\subsection*{How do the $\phi_k$ evolve in time?}
+
+For a free particle at least, the answer is easy. The Hamiltonian depends only on momentum, so each momentum component just gets multiplied by $e^{-i\omega_k t}$ where $\omega_k$ is the frequency that corresponds to a particular value of $k$. We could write a loop, given and array $\phi$ that does this like so:
+
+\begin{verbatim}
+for k in range(len(phi0)):             # iterate through elements of phi
+    if k>(N/2):                        # check for k>N/2
+        p=hbar*(k-N)*pi/a              # momentum is negative
+    else:
+        p=hbar*k*pi/a                  # momentum is positive
+    omega = (0.5*p**2/(2.0*m*hbar))    # get omega from (kinetic) energy
+    phi[k] = phi0[k]*exp(-1j*omega*t)  # rotate phasor by time factor...
+\end{verbatim}
+
+However, this is extremely slow! It would much better to use the fact that the $\phi_k$ are in an array structure. If we could get $\omega$ to be a parallel {\it array} all this code could be reduced to:
+
+\begin{verbatim}
+phi = phi0*exp(-1j*omega*t)     # rotate phasor by time factor...
+\end{verbatim}
+
+But how to do it? It's not too hard, but it takes some thought. The main trouble is that when $k>N/2$ the momentum changes sign and the magnitude of the momentum is proportional to the difference between $k$ and $N$. There is are two features {\it piecewise} and {\it lambda} that can help us with this. 
+
+The function {\it piecewise} is used for created arrays based on piecewise array functions. Say you wanted to create a an array that matched $x$ in dimension but whose elements were:
+
+\begin{equation}
+y =
+\begin{cases}
+-1  & \text{if } x < 0\\
+0  & \text{if } x = 0 \\
++1 & \text{if } x > 0\\
+\end{cases}
+\end{equation}
+
+This is exactly what {\it piecewise} is for. You can do it with one line of code like this:
+
+\begin{verbatim}
+y = piecewise(x, [x<0, x==0, x>0], [-1, 0, 1])
+\end{verbatim}
+
+You can also pass in functions for the `values' and the functions will be called to fill in:
+
+\begin{verbatim}
+y = piecewise(x, [x<0, x==0, x>0], [f1, f2, f3])
+\end{verbatim}
+
+To do what we want we need to check to see if $n$ is greater than $N/2$ and return $n-N$ if it is, or $n$ if it isn't.
+
+\begin{verbatim}
+
+n=arange(N)
+
+def f1(n):
+    return n
+
+def f2(n):
+    return n - N
+	
+y = piecewise(n, [n<N/2, n>=N/2], [f1, f2])
+
+\end{verbatim}
+
+However, we can even improve on this using the {\tt lambda} syntax. This is used to define simple functions in place without requiring a full {\tt def} clause. We could just say:
+
+\begin{verbatim}
+
+n=arange(N)
+
+f1 = lambda n:n
+f2 = lambda n:n - N
+	
+y = piecewise(n, [n<N/2, n>=N/2], [f1, f2])
+
+\end{verbatim}
+
+Or even easier:
+
+\begin{verbatim}
+
+n=arange(N)
+y = piecewise(n, [n<N/2, n>=N/2], [lambda n:n,lambda n:n-N])
+
+\end{verbatim}
+
+
+Here is some sample code, and some more explanation:
+
+\begin{verbatim}
+hbar=1.0                       # use units where hbar = 1
+m=1.0                          # and m=1.0
+NA=500                         # how many arrows?
+a=30.0                         # range of x is -a/2 to a/2
+
+x = linspace(-a/2, a/2, NA)    # NA locations from -a/2 to a/2
+n = arange(NA)                 # n = array([0,1,2,3,.... N-1])
+
+#
+# convert n to an array that changes sign above NA/2 to n-NA
+n = piecewise(n, [n<NA/2, n>=NA/2], [lambda n:n, lambda n:n - NA])
+k = 2*n*pi/a
+Energy = (hbar*k)**2/(2.0*m)   # get the kinetic energy
+omega = Energy/hbar            # get the frequency
+\end{verbatim}
+
+This gets us set up with the right {\tt omega} array so we can shift all the phases of $\phi_k$, very quickly, with a single line of code.
+
+\subsection*{So.. what are we supposed to do?}
+
+Your mission is to produce two deliverables:
+
+1) A 3D representation of the complex wavefunction corresponding to a gaussian wave-packet which should start out looking like this:
+
+Fig.~\ref{fig:initialwf}.
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=6in]{initialwf.png}
+   \caption{The initial wavefunction, 500 arrows, a=30.0}
+   \label{fig:initialwf}
+\end{figure}
+
+Later on your display should look something like this Fig.~\ref{fig:laterwf}.
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=6in]{laterwf.png}
+   \caption{The wavefunction later, 40 arrows, a=6.0}
+   \label{fig:laterwf}
+\end{figure}
+
+Please include at least one screen capture of your wavefunction and include it in your report.
+
+2) A graph of the expectation value of the position of the particle as a function of time, and a graph
+of the uncertainty of the position $\sigma_x$ as a function of time. 
+With my setup I get graphs that look like Fig.~\ref{fig:pos_exp} and Fig.~\ref{fig:sig_x}.
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=6in]{pos_exp.png}
+   \caption{Expectation of position vs. time}
+   \label{fig:pos_exp}
+\end{figure}
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=6in]{sig_x.png}
+   \caption{Uncertainty in position vs. time.}
+   \label{fig:sig_x}
+\end{figure}
+
+I've loaded a `starter' program on the ``K'' drive which follows:
+
+\begin{verbatim}
+#
+# cp5: Solution to Computing Project 5: FFT evolution
+#
+
+from visual import *
+from visual.graph import *
+from safcn import SetArrowFromCN  # defined in a file safcn.py 
+
+gd = gdisplay(title="<x> vs. t", xtitle="t", ytitle="<x>", 
+                foreground=color.black, background=color.white)
+gr = gcurve(color=color.black)
+scene.background=color.white
+
+hbar=1.0                       # use units where hbar = 1
+m=1.0                          # and m=1.0
+NA=500                         # how many arrows?
+a=30.0                         # range of x is -a/2 to a/2
+
+x = linspace(-a/2, a/2, NA)    # NA locations from -a/2 to a/2
+n = arange(NA)                 # n = array([0,1,2,3,.... N-1])
+n = piecewise(n, [n<NA/2, n>=NA/2], [lambda n:n, lambda n:n - NA])
+k = 2*n*pi/a
+Energy = (hbar*k)**2/(2.0*m)   # get the kinetic energy
+omega = Energy/hbar            # get the frequency
+
+t = 0.0
+dt = 0.01
+kMin = 2*pi/a
+k0 = 20*kMin
+sigma = a/15.0
+arrowScale = sqrt(NA*a*sigma)/10.0
+
+psi=exp(1j*k0*x - ((x+1*a/4)/sigma)**2)   # gaussian wave packet
+psi = psi/sqrt((abs(psi)**2).sum())     # normalize
+
+alist = []
+for i in range(NA):
+    alist.append(arrow(pos=(x[i],0,0), color=color.red))
+    SetArrowFromCN(arrowScale*psi[i],alist[i])
+    
+phi0 = fft.fft(psi)  # fft at t=0
+
+updateScreen = False
+while True:
+    rate(1.0/dt)
+
+    if scene.kb.keys: # event waiting to be processed?
+        s = scene.kb.getkey() # get keyboard info
+        if s == ' ':
+            updateScreen ^= 1
+    
+    if updateScreen:
+		#
+		# here is where you'll want to compute the 
+		# time evolution of phi (using phi0 as the t=0 value)
+		# and then compute the inverse FFT to get back psi
+		# at the current time. Then update the arrows
+		# and get expectation values to graph...
+		#        
+
+\end{verbatim}
+
+\subsection*{Questions}
+
+1) If you allow the program continue to run past the point shown in Fig.~\ref{fig:pos_exp} what happens to the expectation value of position vs. time? Does this seem like a reasonable result for a free particle? What's happening?.
+
+2) In problem 2.22 you will find the behavior of the gaussian envelope of a free particle wave packet over time. Does the graph of $\sigma_x$ vs time appear to be reasonable given the result of problem 2.22. Justify your answer with a numerical comparison.
+
+\end{document}

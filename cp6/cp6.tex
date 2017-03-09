@@ -1,0 +1,178 @@
+% !TEX TS-program = pdflatex
+% !TEX encoding = UTF-8 Unicode
+
+% This is a simple template for a LaTeX document using the "article" class.
+% See "book", "report", "letter" for other types of document.
+
+\documentclass[11pt]{article} % use larger type; default would be 10pt
+
+\usepackage[utf8]{inputenc} % set input encoding (not needed with XeLaTeX)
+
+%%% Examples of Article customizations
+% These packages are optional, depending whether you want the features they provide.
+% See the LaTeX Companion or other references for full information.
+
+%%% PAGE DIMENSIONS
+\usepackage{geometry} % to change the page dimensions
+\usepackage{braket}
+\geometry{a4paper} % or letterpaper (US) or a5paper or....
+% \geometry{margin=2in} % for example, change the margins to 2 inches all round
+% \geometry{landscape} % set up the page for landscape
+%   read geometry.pdf for detailed page layout information
+
+\usepackage{graphicx} % support the \includegraphics command and options
+
+\usepackage[parfill]{parskip} % Activate to begin paragraphs with an empty line rather than an indent
+
+%%% PACKAGES
+\usepackage{booktabs} % for much better looking tables
+\usepackage{array} % for better arrays (eg matrices) in maths
+\usepackage{paralist} % very flexible & customisable lists (eg. enumerate/itemize, etc.)
+\usepackage{verbatim} % adds environment for commenting out blocks of text & for better verbatim
+\usepackage{subfig} % make it possible to include more than one captioned figure/table in a single float
+% These packages are all incorporated in the memoir class to one degree or another...
+\usepackage{amsmath}
+%%% HEADERS & FOOTERS
+\usepackage{fancyhdr} % This should be set AFTER setting up the page geometry
+\pagestyle{fancy} % options: empty , plain , fancy
+\renewcommand{\headrulewidth}{0pt} % customise the layout...
+\lhead{}\chead{}\rhead{}
+\lfoot{}\cfoot{\thepage}\rfoot{}
+
+%%% SECTION TITLE APPEARANCE
+\usepackage{sectsty}
+\allsectionsfont{\sffamily\mdseries\upshape} % (See the fntguide.pdf for font help)
+% (This matches ConTeXt defaults)
+
+%%% ToC (table of contents) APPEARANCE
+\usepackage[nottoc,notlof,notlot]{tocbibind} % Put the bibliography in the ToC
+\usepackage[titles,subfigure]{tocloft} % Alter the style of the Table of Contents
+\renewcommand{\cftsecfont}{\rmfamily\mdseries\upshape}
+\renewcommand{\cftsecpagefont}{\rmfamily\mdseries\upshape} % No bold!
+
+%%% END Article customizations
+
+%%% The "real" document content comes below...
+
+\title{Physics 465: Computing Project 6 (due 10/15)}
+
+%\author{Steve Spicklemire}
+%\date{Aug. 7, 2011} % Activate to display a given date or no date (if empty),
+         % otherwise the current date is printed 
+
+\begin{document}
+\maketitle
+
+\section*{Designing a Quantum Wire}
+
+You are no doubt familiar with Ohm's Law and the relationship between resistance ($R$), geometry ($L, A$), and the resistivity ($\rho$) of  macroscopic ``chunks'' of conducting material:
+
+\begin{equation}
+R = \rho \frac{L}{A}
+\label{eq1}
+\end{equation}
+
+Without going in to any more detail than necessary at this early stage you should know that when a conducting material gets to be small compared to the mean free path of the conducting electrons (or holes) the simple relationship of Eq.~\ref{eq1} no longer holds. The primary aim of this project is for you to investigate the behavior of such a system using the simplest possible model that take quantum mechanics into account. 
+
+
+
+\subsection*{A long quantum ribbon}
+
+Suppose we could somehow fabricate a long thin ribbon of material that had a rectangular cross sectional shape. Electrons in such a material would be free in the ``long'' direction, but confined to the ribbon in the cross sectional plane. Let's assume that the potential in the transverse direction is a sum of an $x$ part and a $y$ part, so the Schr\"odinger equation becomes:
+
+\begin{equation}
+\frac{-\hbar^2}{2m}(\frac{\partial^2}{\partial x^2} + \frac{\partial^2}{\partial y^2} + \frac{\partial^2}{\partial z^2})\psi + V(x)\psi + V(y)\psi = E\psi
+\label{eq2}
+\end{equation}
+
+Where $\psi$ is a function of $x, y$ and $z$. $V(x)$ is the potential energy as a function of the ``width'' direction, $V(y)$ is the potential energy as a function of the ``height'' direction, and the particle is free in the $z$ direction. Without turning this into a course in solid state physics, let's just say that if the material is some kind of semiconductor, (e.g., $GaAs$) that can be doped with some kind of impurity (e.g., $Al$) which has the effect of shifting the fermi level and the size of the band gap in the material. If you construct a ``heterojunction'' with $Ga_{1-x} Al_x As$ with different values of $x$ the energy of the conduction band will shift and the net result is that you can ``paint'' whatever potential you like using Aluminum as the paint. The intrinsic band gap in $GaAs$ is about $1.43$~eV and it shifts upward about $1.25x$~eV as $x$ is changed, so we can build quantum ``wells'' that are around 1~eV deep pretty easily using Aluminum ``paint''. Another factor is that the ``effective'' mass of an electron in the conduction band of $GaAs$ is around $0.067~m_e$ (where $m_e$ is the free space mass of a bare electron). 
+
+So.. for the sake of argument let's say that our potential well is 1~eV deep with a height of 1.0~nm and a variable width (say from 1~nm to 20~nm or so). Because the potential is approximated as the sum of an $x$ and $y$ part Eq.~\ref{eq2} breaks into three parts:
+
+\begin{eqnarray*}
+\frac{-\hbar^2}{2m}\frac{\partial^2}{\partial x^2}\psi_x(x) + V_x(x)\psi_x(x) & = & E_x\psi_x(x)\cr
+\cr
+\frac{-\hbar^2}{2m}\frac{\partial^2}{\partial x^2}\psi_x(x) + V_y(y)\psi_y(y) & = & E_y\psi_y(y)\cr
+\cr
+\frac{-\hbar^2}{2m}\frac{\partial^2}{\partial x^2}\psi_x(x) & = & E_z\psi_z(z)\cr
+\label{eq3}
+\end{eqnarray*}
+
+Since there is no potential in the $z$ direction, it has only free particle solutions. Since the $y$ direction has such a small thickness, there is only one solution (the ground state) for $\psi_y(y)$. The $x$ direction is the only really complicated direction, and it has a different number of solutions depending on the value of the width of the ribbon. We're going to focus all of our attention on $\psi_x(x)$ and the corresponding energy eigenvalue $E_x$.
+
+The truly fascinating aspect of this is that if you apply a small potential difference $\phi$ across the ribbon you get a current that is essentially proportional to the number of transverse bound states. Again, without getting into all the grungy details here the current turns out to be:
+
+\begin{equation}
+I \approx \frac{2 q_e^2}{h} N \phi
+\label{eq4}
+\end{equation}
+
+which is a slightly simplified version of the {\it Landauer Formula} which you can find in various places. $N$ is essentially the number of (bound) transverse states available. Admittedly we're glossing over huge details here, but the point is that this simple quantum mechanical model (the finite square well) plays as essential role in understanding the detailed behavior of conduction on the nano-scale. Notice that the {\it length} of the ribbon doesn't appear in the equation for current! This is remarkable and pretty non-intuitive.
+
+\section*{Some Coding Hints}
+
+We've reached the point now where I hope you have the basic idea. You can start with one of your old projects and build from there. I would recommend, for this project, using {\it real} units (i.e., SI units, or eV-nm, or something physical), since we're modeling something close to a real system this time. The only tricky part is computing the stationary state wavefunctions. I would suggest that the {\tt piecewise} function is your friend. You can do something like this:
+
+\begin{verbatim}
+z1 = 1.0899046534519674    # Put your solution z values here
+z2 = 2.0693673198182818    # for your two bound states, 
+                           # (note these are from last year... not right for you!)
+
+k1 = k0*z1/z0              # get the corresponding k
+k2 = k0*z2/z0              
+kap1 = sqrt(k0**2 - k1**2) # and kappa values
+kap2 = sqrt(k0**2 - k2**2)
+
+E1 = -(hbar*kap1)**2/(2.0*m)  # and the corresponding energies
+E2 = -(hbar*kap2)**2/(2.0*m)
+
+w1 = E1/hbar                  # and frequencies
+w2 = E2/hbar
+
+wn=[w1,w2]
+
+t = 0.0
+dt = (2*pi/(w2-w1))/100.0     # pick a reasonable dt
+
+psis = zeros((2,NA),double)   # initialize psis to a 2 x NA array of zeros
+
+def f1(x):                    # define the four eigenfunctions for the FSW potential
+    return cos(k1*x)
+    
+def f2(x):
+    return sin(k2*x)
+    
+def f3(x):
+    return f1(a)*exp(-abs(kap1*x))/exp(-abs(kap1*a))
+    
+def f4(x):
+    return sign(x)*f2(a)*exp(-abs(kap2*x))/exp(-abs(kap2*a))
+    
+
+#    
+# finally use piecewise to build your psis array.
+#
+    
+psis[0] = piecewise(x, [x<-a, (x>=-a)&(x<=a), x>a], [f3, f1, f3])   
+psis[0] = psis[0]/sqrt((abs(psis[0])**2).sum())
+psis[1] = piecewise(x, [x<-a, (x>=-a)&(x<=a), x>a], [f4, f2, f4])
+psis[1] = psis[1]/sqrt((abs(psis[1])**2).sum())
+\end{verbatim}
+
+\subsection*{So... what are we supposed to do?}
+
+For this project, compute analytically how wide you'd need to make the ribbon so that it has a resistance of about $2.6 {\rm k\Omega}$ (What value would $N$ have to have in order to achieve this result?) Then for this width compute the exact energy eigenvalues and the corresponding values for $k_0$, $k$, and $\kappa$. Finally write a python program that can be used to visualize the resulting wavefunctions and their time dependence. For the following graphs and questions please choose any pair of the bound states to create a superposition state composed of equal parts of the two states you choose.
+
+Your deliverables include:
+
+1) A graph of $\braket{x(t)}$ for your superposition.
+
+2) A screen shot of your superposition at $t=0$ and at a later time.
+
+\subsection*{Questions}
+
+1) Use your knowledge of the finite square well to predict the frequency of oscillation of $\braket{x(t)}$. Does your graph agree with your analytical result?
+
+2) If you just have one state or the other you should see $\braket{x(t)} = 0$ independent of time. Does the frequency of the arrows make sense based on your calculation of each state's energy? Are the arrows behaving as you'd expected them to?
+
+\end{document}

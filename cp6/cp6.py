@@ -2,33 +2,31 @@
 # cp6: Solution to Computing Project 6: Quantum Wire Project
 #
 
-from visual import *
-from visual.graph import *
-from safcn import SetArrowFromCN  # defined in a file safcn.py 
+from vpython import *
+from numpy import *
+from vpython import rate
 
-gd = gdisplay(title="<x> vs. t", xtitle="t", ytitle="<x>", 
-                foreground=color.black, background=color.white)
-                
+canvas()
 g1 = gcurve(color=color.black)
-
-scene.background=color.white
 
 hbar=1.05e-34                    # Js
 m=0.067*9.1e-31                  # and m_eff=kg
 NA=80                            # how many arrows?
+NA2=int(NA/2)                    # half of the arrows
 a=5.34e-9                        # width for 5 bound states and 1eV well depth.
 
 x = linspace(-2.0*a, 2.0*a, NA)  # NA locations from -2a to 2a
 
-z0 = 9*pi/4                      # split the difference... between 2*pi and 5*pi/2
+z0 = 2.1*pi                      # Not a great choice. Why not? Pick a better one
 k0 = z0/a                        # get k0
 
 #
-# numerical solutions for z when z0 = 9*pi/4
+# numerical solutions for z when z0 = 2.1*pi, you should find a better z0 and
+# find solutions for that choice.
 #
 
-z1 = 1.375
-z2 = 2.743
+z1 = 1.36274
+z2 = 2.71711
 
 k1 = k0*z1/z0
 k2 = k0*z2/z0
@@ -87,35 +85,53 @@ elif 0:
 cn=[c1, c2]                               # array of amplitudes
 t = 0.0                                   # start at t=0
 
-psi = zeros(NA, complex)
-for i in range(2):
-    psi = psi + cn[i]*psis[i]*exp(-1j*wn[i]*t)
+psi = zeros(NA, complex)                  # construct psi at time '0'
+for i in range(len(cn)):
+    psi = psi + cn[i]*psis[i]
 
-arrowScale = a/psis[0][NA/2]              # scale to make the middle of psis[0] about 3a high
+arrowScale = a/psis[0][NA2]              # scale to make the middle of psis[0] about 3a high
+
+def SetArrowFromCN( cn, a):
+    """
+    SetArrowWithCN takes a complex number  cn  and an arrow object  a .
+    It sets the  y  and  z  components of the arrow s axis to the real 
+    and imaginary parts of the given complex number. 
+    
+    Just like Computing Project 1, except y and z for real/imag.
+    """
+    a.axis.y = cn.real
+    a.axis.z = cn.imag
+    a.axis.x = 0.0
 
 alist = []
 for i in range(NA):
-    alist.append(arrow(pos=(x[i],0,0), color=color.red))
+    alist.append(arrow(pos=vec(x[i],0,0), axis=vec(0,a,0), color=color.red))
     SetArrowFromCN(arrowScale*psi[i],alist[i])
 
-update=False
+rate(1)  # put a "fake" rate command in to render what we've got so far.
+
+#
+# Now, all the arrows are made, and the basis functions and coefficients are 
+# set. Create a loop that produces the correct time evolutions.
+#
+
+
+# In[ ]:
+
 while True:
-    rate(100)
+    rate(30)
 
-    if scene.kb.keys: # event waiting to be processed?
-        s = scene.kb.getkey() # get keyboard info
-        if s == ' ':
-            update ^= 1
+    t = t+dt
+    psi = zeros(NA, complex)
+    for i in range(2):
+        psi = psi + cn[i]*psis[i]*exp(-1j*wn[i]*t)
 
-    if update:
-        t = t+dt
-        psi = zeros(NA, complex)
-        for i in range(2):
-            psi = psi + cn[i]*psis[i]*exp(-1j*wn[i]*t)
-        
-        for i in range(NA):
-            SetArrowFromCN(arrowScale*psi[i],alist[i])
-            
-        #g1.plot(pos=(t,psi[3*NA/4].real))
-        xexp=(x*abs(psi*psi)).sum()
-        g1.plot(pos=(t,xexp))
+    for i in range(NA):
+        SetArrowFromCN(arrowScale*psi[i],alist[i])
+
+    xexp=(x*abs(psi*psi)).sum()
+    g1.plot(pos=(t,xexp))
+
+
+
+

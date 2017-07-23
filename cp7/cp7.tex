@@ -1,0 +1,276 @@
+% !TEX TS-program = pdflatex
+% !TEX encoding = UTF-8 Unicode
+
+% This is a simple template for a LaTeX document using the "article" class.
+% See "book", "report", "letter" for other types of document.
+
+\documentclass[11pt]{article} % use larger type; default would be 10pt
+
+\usepackage[utf8]{inputenc} % set input encoding (not needed with XeLaTeX)
+
+%%% Examples of Article customizations
+% These packages are optional, depending whether you want the features they provide.
+% See the LaTeX Companion or other references for full information.
+
+%%% PAGE DIMENSIONS
+\usepackage{geometry} % to change the page dimensions
+\usepackage{braket}
+\geometry{a4paper} % or letterpaper (US) or a5paper or....
+% \geometry{margin=2in} % for example, change the margins to 2 inches all round
+% \geometry{landscape} % set up the page for landscape
+%   read geometry.pdf for detailed page layout information
+
+\usepackage{graphicx} % support the \includegraphics command and options
+
+\usepackage[parfill]{parskip} % Activate to begin paragraphs with an empty line rather than an indent
+
+%%% PACKAGES
+\usepackage{booktabs} % for much better looking tables
+\usepackage{array} % for better arrays (eg matrices) in maths
+\usepackage{paralist} % very flexible & customisable lists (eg. enumerate/itemize, etc.)
+\usepackage{verbatim} % adds environment for commenting out blocks of text & for better verbatim
+\usepackage{subfig} % make it possible to include more than one captioned figure/table in a single float
+% These packages are all incorporated in the memoir class to one degree or another...
+\usepackage{amsmath}
+%%% HEADERS & FOOTERS
+\usepackage{fancyhdr} % This should be set AFTER setting up the page geometry
+\pagestyle{fancy} % options: empty , plain , fancy
+\renewcommand{\headrulewidth}{0pt} % customise the layout...
+\lhead{}\chead{}\rhead{}
+\lfoot{}\cfoot{\thepage}\rfoot{}
+
+%%% SECTION TITLE APPEARANCE
+\usepackage{sectsty}
+\allsectionsfont{\sffamily\mdseries\upshape} % (See the fntguide.pdf for font help)
+% (This matches ConTeXt defaults)
+
+%%% ToC (table of contents) APPEARANCE
+\usepackage[nottoc,notlof,notlot]{tocbibind} % Put the bibliography in the ToC
+\usepackage[titles,subfigure]{tocloft} % Alter the style of the Table of Contents
+\renewcommand{\cftsecfont}{\rmfamily\mdseries\upshape}
+\renewcommand{\cftsecpagefont}{\rmfamily\mdseries\upshape} % No bold!
+
+%%% END Article customizations
+
+%%% The "real" document content comes below...
+
+\title{Physics 465: Computing Project 7 (due L29, 10/28)}
+
+%\author{Steve Spicklemire}
+%\date{Aug. 7, 2011} % Activate to display a given date or no date (if empty),
+         % otherwise the current date is printed 
+
+\begin{document}
+\maketitle
+
+\section*{1) Barrier Penetration: The Operator Method}
+
+The point of this project is to learn how to separately apply the kinetic and potential parts of the hamiltonian operators so as to evolve a wavefunction in time. The context of this exercise is the penetration of a barrier by a wave packet, but the technique can be applied to many other situations of interest. 
+
+Since we're just getting started with operators and Dirac notation, I'm presenting {\it all the steps} in excruciating detail for this project. Section (2) explains where the Time Evolution Operator (TEO) comes from. Section (3) describes how the Fourier transform can be thought of as a simple change of basis. Section (4) combines the concepts from section (2) and section (3) to form an algorithm for evolving a wavefunction that doesn't require first finding the stationary states of the potential energy. Section (5) explains how to estimate the expected value of the transmission probability for a wave packet striking a ``square barrier'' and section (6) describes the deliverables for this project including the ``CP7 Starter'' code that is available on the `K' drive for your inspection and use. Before getting lost in the trees let me just point out: all you {\it absolutely need} for this project is section 6. Everything else is {\it supporting material} to help ensure that you understand what's going on.
+
+\subsection*{2) Time Evolution as an Operator}
+
+Since we're just learning to use the more formal Dirac notation and state/operator language to understand quantum mechanical ideas, let's look at the Time Dependent Shr\"odinger equation (TDSE) in a slightly different way.
+
+\begin{equation}
+i\hbar \frac{\partial \ket{\psi}}{\partial t} = \hat{H}\ket{\psi}
+\end{equation}
+
+This has a simple solution! It's just:
+
+\begin{equation}
+\ket{\psi(t)} = e^{-i\frac{\hat{H}}{\hbar} t} \ket{\psi(0)}
+\end{equation}
+
+The exponential operator out in front is sometimes given the fancy name: ``The Time Evolution Operator'' or $\hat{U}(t)$:
+
+\begin{equation}
+\hat{U}(t) = e^{-i\frac{\hat{H}}{\hbar} t}
+\end{equation}
+
+The trouble is that $\hat{H}$ is a complicated operator! What does it mean to have it in the exponential like that? One way to think of it is in terms of the Taylor Series expansion of the exponential:
+
+\begin{equation}
+\hat{U}(t) = (1 + \left(-i\frac{\hat{H}}{\hbar} t\right) + \frac{1}{2!}\left(-i\frac{\hat{H}}{\hbar} t\right)^2 + \frac{1}{3!}\left(-i\frac{\hat{H}}{\hbar} t\right)^3 + \cdots )
+\label{eq:TEO}
+\end{equation}
+
+If you have a set of basis vectors $\ket{n}$ that are eigenvectors of the Hamiltonian... this is easy, just transform $\psi(0)$ to that basis, using the identity operator trick, and convert the operators to eigenvalues, (where $c_n \equiv \braket{n|\psi(0)}$):
+
+
+\begin{eqnarray}
+\ket{\psi(t)} &=& \hat{U}(t)\ket{\psi(0)} = e^{-i\frac{\hat{H}}{\hbar} t} \left(\hat{I}\right) \ket{\psi(0)}\\
+              &=& e^{-i\frac{\hat{H}}{\hbar} t} \left(\sum_n \ket{n}\bra{n}\right)\ket{\psi(0)} =e^{-i\frac{\hat{H}}{\hbar} t}\sum \ket{n}\braket{n|\psi(0}\\
+              &=& e^{-i\frac{\hat{H}}{\hbar} t}\sum \braket{n|\psi(0} \ket{n} = e^{-i\frac{\hat{H}}{\hbar} t}\sum c_n \ket{n}\\
+              &=& (1 + (-i\frac{\hat{H}}{\hbar} t) + \frac{1}{2!}(-i\frac{\hat{H}}{\hbar} t)^2 + \cdots )\sum c_n \ket{n}\\
+              &=& \sum_n c_n(1 + (-i\frac{\hat{H}}{\hbar} t) + \frac{1}{2!}(-i\frac{\hat{H}}{\hbar} t)^2 + \cdots )\ket{n}\\
+              &=& \sum_n c_n(1 + (-i\frac{1}{\hbar} t)\hat{H} + (-i\frac{1}{\hbar} t)^2\hat{H}^2 + \cdots )\ket{n}\\
+              &=& \sum_n c_n(1 + (-i\frac{1}{\hbar} t)\hat{H}\ket{n} + (-i\frac{1}{\hbar} t)^2\hat{H}^2\ket{n} + \cdots )\\
+              &=& \sum_n c_n(1 + (-i\frac{1}{\hbar} t) E_n\ket{n} + (-i\frac{1}{\hbar} t)^2 E_n^2\ket{n} + \cdots )\\
+              &=& \sum_n c_n(1 + (-i\frac{1}{\hbar} t) E_n + (-i\frac{1}{\hbar} t)^2 E_n^2 + \cdots )\ket{n}\\
+              &=& \sum_n c_n e^{-i\frac{E_n}{\hbar}t}\ket{n}
+\end{eqnarray}
+
+
+Look familiar? I hope so! It's just the rule we've been using all along to determine how a wavefunction evolves in time. The trouble is, finding the eigenstates $\ket{n}$ may be a very difficult problem in itself, or those states may be computationally inconvenient for a variety of reasons. There's another way to interpret the problem that leads to a different computational strategy for finding a solution. In most cases the Hamiltonian can be separated into a part that depends only on $p$, and another part that depends only on $x$:
+
+\begin{equation}
+\hat{H} = \frac{\hat{p}^2}{2m} + V(x)
+\end{equation}
+
+so that the time evolution operator $\hat{U}$ can be factored like so:
+
+\begin{equation}
+\hat{U}(t) = e^{-i\frac{\hat{H}}{\hbar} t} = 
+e^{-i\frac{\frac{\hat{p}^2}{2m} + V(x)}{\hbar} t}= 
+e^{-i{\frac{\hat{p}^2}{2m\hbar}t}}e^{-i\frac{V(x)}{\hbar}t} =
+\hat{U}_T(t)\hat{U}_V(t)
+\end{equation}
+
+So now we have two operators:
+
+\begin{eqnarray}
+\hat{U}_T(t)  &=& e^{-i{\frac{\hat{p}^2}{2m\hbar}t}}\\
+\hat{U}_V(t)  &=& e^{-i\frac{V(x)}{\hbar}t}
+\end{eqnarray}
+
+Note that $\hat{U}_T(t)$ depends only on momentum while $\hat{U}_V(t)$ depends only on position. So what's the advantage of breaking it up like that? If $\psi(0)$ is expressed in the $k$-space basis (or the momentum representation) then $\hat{U}_T(t)$ is just a simple multiply, no calculus! On the other hand if $\psi(0)$ is represented in the $x$-space basis (or position representation) then $\hat{U}_V(t)$ is a simple multiply in the same way. Hmm.....
+
+
+\subsection*{3) FFT/IFFT as a Change of Basis}
+
+Remember that we saw (Lesson 24) that a change of basis is easy to accomplish using the identity operator:
+
+\begin{equation}
+\hat{I} = \sum_i \ket{e_i}\bra{e_i}
+\end{equation}
+
+Where the $\ket{e_i}$ are a complete set of basis vectors for your vector space. Of course the discrete form of this equation has a `vector function' form as well
+
+\begin{equation}
+\hat{I} = \int_z \ket{e(z)}\bra{e(z)} dz
+\end{equation}
+
+Where $z$ is whatever continuous parameter distinguishes the basis vectors. There are two super important basis vector sets that we'll use a lot: $\ket{x}$ and $\ket{k}$ these are the basis vectors for ``$x$-space'' and ``$k$-space''. You already know them a bit because you know that $\psi(x)$ is the amplitude of seeing a particle at a position $x$ given that it's in a state $\ket{\psi}$:
+
+\begin{equation}
+\psi(x) = \braket{x|\psi}
+\end{equation}
+
+Also.. you're familiar with $\phi(k)$ because it's just the amplitude of finding a particle with momentum $\hbar k$ given that it's in state $\ket{\psi}$
+
+\begin{equation}
+\phi(k) = \braket{k|\psi}
+\end{equation}
+
+As you no doubt remember when changing from one basis to another the transformation matrix is computed as the inner product of the basis vectors from the two different basis sets. I'm not going to derive this result, but you can see that it's plausible from the context. What is the value of $\braket{x|k}$? It's the amplitude of see a particle at position $x$ given that it's in a state of exact momentum $\hbar k$:
+
+\begin{equation}
+\braket{x|k} = \frac{1}{\sqrt{2\pi}} e^{ikx}
+\end{equation}
+
+Also.. the reverse of this, $\braket{k|x}$ is the amplitude of finding a particle's momentum equal to $\hbar k$ given that it's at location $x$ (notice that this is just the complex conjugate of $\braket{x|k}$).
+
+\begin{equation}
+\braket{k|x} = \frac{1}{\sqrt{2\pi}} e^{-ikx}
+\end{equation}
+
+Now let's work out the transformation from $x$-space to $k$-space:
+
+\begin{eqnarray}
+\ket{\psi}       &=& \hat{I}\ket{\psi}\\
+\braket{k|\psi}   &=& \bra{k}\hat{I}\ket{\psi}\\
+\phi(k)          &=& \bra{k}\left(\int_x \ket{x}\bra{x}\right)\ket{\psi} dx\\
+\phi(k)          &=& \int_x \braket{k|x}\braket{x|\psi} dx = \int_x \braket{k|x} \psi(x) dx\\
+\phi(k)          &=& \frac{1}{\sqrt{2\pi}} \int_x e^{-ikx} \psi(x) dx
+\end{eqnarray}
+
+Whoo Hoo! It's exactly the Fourier transform! What about getting back to $x$-space?
+
+\begin{eqnarray}
+\ket{\psi}       &=& \hat{I}\ket{\psi}\\
+\braket{x|\psi}  &=& \bra{x}\hat{I}\ket{\psi}\\
+\psi(x)          &=& \bra{x}\left(\int_k \ket{k}\bra{k}\right)\ket{\psi} dk\\
+\psi(x)          &=& \int_k \braket{x|k}\braket{k|\psi} dk = \int_k \braket{x|k} \phi(k) dk\\
+\psi(x)          &=& \frac{1}{\sqrt{2\pi}} \int_k e^{+ikx} \phi(k) dk
+\end{eqnarray}
+
+Indeed! The Fourier and inverse Fourier transforms are just basis transformations between $x$-space and $k$-space! 
+
+\subsection*{4) Applying the Concept}
+
+The point is that if we have an easy way to switch back and forth between $x$-space and $k$-space (i.e., the FFT/IFFT) we can advance the wavefunction approximately by  transforming to $k$-space, applying only $\hat{U}_T$ for a short time, transforming back to $x$-space and applying $\hat{U}_V$ for a short time. So long as the time is short enough that cross terms from Eq.~\ref{eq:TEO} aren't very significant, this method works pretty well! Here is the basic plan:
+
+\begin{enumerate}
+\item Start with $\psi(x)$
+\item Transform to $k$-space using the FFT $\rightarrow \phi(k)$
+\item Apply $\hat{U}_T(dt) \phi(k)$ to get an updated $\phi(k)$.
+\item Transform back to $x$-space using the IFFT $\rightarrow \psi(x)$
+\item Apply $\hat{U}_V(dt) \psi(x)$ to get an updated $\psi(x)$.
+\item Return to step 2!
+\end{enumerate}
+
+Repeat this as many times as needed to get the job done.
+
+If you set $V(x)$ to zero, it should behave just like the solution to computing project 5, the free particle.
+
+If you set $V(x) = \frac{1}{2}m\omega^2 x^2$ it should behave just like the solution to computing project 4, the SHO.
+
+If you set the potential to be a positive constant over a small portion of the $x$ axis, it should behave like a wave-packet penetrating a barrier. That's what we're after.
+
+\subsection*{5) Estimating the Transmission Probability}
+
+The idea from the previous section could be applied to many different situations. The focus for this project is the problem of barrier penetration. We worked out in class (see slides for Lesson 23) the solution to the ``Square Barrier'' can be found by solving the following matrix equation:
+
+\begin{equation}
+\left[ \begin{array}{c} e^{-ika} \\ ike^{-ika} \\ 0 \\ 0 \end{array} \right] = \begin{bmatrix} -e^{ika} & e^{-\kappa a} & e^{\kappa a} & 0 \\ ik e^{ika} & \kappa e^{-\kappa a} & -\kappa e^{\kappa a} & 0\\ 0 & e^{\kappa a} & e^{-\kappa a} & - e^{ika} \\ 0 & \kappa e^{\kappa a} & -\kappa e^{-\kappa a} & -ik e^{ika} \end{bmatrix} \times \left[ \begin{array}{c} B \\ C \\ D \\ F \end{array} \right]
+\end{equation}
+
+where $k$ and $\kappa$ have their usual meaning and $F$ is the amplitude for passing through the barrier.  What we'd like to do is create a gaussian wave-packet (similar to CP5) and ``send'' that toward the barrier. After a bit of time one packet is clearly reflected back, and another emerges beyond the barrier. How can we get an estimate of the probability of transmission or reflection to compare to our new approach of computing the time evolution of the wavefunction? Easy.. we just compute the weighted average of the transmission probability for each $k$ value that's used in forming the wave packet:
+
+\begin{equation}
+\langle T_{\rm avg} \rangle = \sum_{{\rm all }k} {\rm Prob }(k) T(k)
+\end{equation}
+
+What is ${\rm Prob }(k)$? It's just the square of the Fourier transform: $|\phi(k)|^2 = |\braket{k|\psi}|^2$. What is $T(k)$? It's just the square of the transmission coefficent $F$. So.. the sum becomes:
+
+\begin{equation}
+\langle T_{\rm avg} \rangle = \sum_{{\rm all }k} |\phi(k)|^2 |F|^2
+\end{equation}
+
+This sum is computed and printed in the ``Starter'' code so you can check your numerical results directly.
+
+\subsection*{6) So... what are we supposed to do?}
+
+Your mission is to produce two deliverables:
+
+1) Use the ideas of section (4) to create a loop that continuously updates the wavefunction by repeatedly changing basis and applying the appropriate part of the TEO for each basis. Include a screenshot of your wave packets after they have interacted with the barrier, but before they start to ``wrap around'' and the ends of the arrays. As an example my program produces a display like Fig.~\ref{fig:packetGraph} after about 3.6 units of time.
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=5in]{packetGraph.png} 
+   \caption{View of Reflected and Transmitted Packets after 3.6 time units}
+   \label{fig:packetGraph}
+\end{figure}
+
+2) Include a graph of the probability of measuring your particle on the left of the origin, and the probability of measuring your particle on the right of the origin as a function of time. As an example my program produces a graph like Fig.~\ref{fig:probGraph} for about the first 3.6 time units after the program starts.
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=5in]{probGraph.png} 
+   \caption{Probabilities for $x<0$ and $x>0$ over time for the first 3.6 time units}
+   \label{fig:probGraph}
+\end{figure}
+
+There is a ``Starter Program'' on the `K' drive that you can use to get started. It's basically a very slightly modified version of the setup for CP5 (the free particle project). In this program the wave-packet is initialized, along with the 3D representation. The theoretical transmission probability is calculated and printed.
+
+\subsection*{Questions}
+
+1) If you increase the barrier height from 10.0 units to 100.0 units you'll find that you need to reduce the time step to maintain reasonable results. Why? Explain.
+
+2) Why does the probability graph display nonsense after about 3.6 time units with the initial conditions provided in the starter program?
+
+3) How could you modify the program so that it would compute reasonable probabilities for later times? Which initial conditions would you need to modify in the program to make that work? Try it and see that it behaves reasonably.
+
+\end{document}

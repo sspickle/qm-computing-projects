@@ -1,0 +1,259 @@
+% !TEX TS-program = pdflatex
+% !TEX encoding = UTF-8 Unicode
+
+% This is a simple template for a LaTeX document using the "article" class.
+% See "book", "report", "letter" for other types of document.
+
+\documentclass[11pt]{article} % use larger type; default would be 10pt
+
+\usepackage[utf8]{inputenc} % set input encoding (not needed with XeLaTeX)
+
+%%% Examples of Article customizations
+% These packages are optional, depending whether you want the features they provide.
+% See the LaTeX Companion or other references for full information.
+
+%%% PAGE DIMENSIONS
+\usepackage{geometry} % to change the page dimensions
+\usepackage{braket}
+\geometry{a4paper} % or letterpaper (US) or a5paper or....
+% \geometry{margin=2in} % for example, change the margins to 2 inches all round
+% \geometry{landscape} % set up the page for landscape
+%   read geometry.pdf for detailed page layout information
+
+\usepackage{graphicx} % support the \includegraphics command and options
+
+\usepackage[parfill]{parskip} % Activate to begin paragraphs with an empty line rather than an indent
+
+%%% PACKAGES
+\usepackage{booktabs} % for much better looking tables
+\usepackage{array} % for better arrays (eg matrices) in maths
+\usepackage{paralist} % very flexible & customisable lists (eg. enumerate/itemize, etc.)
+\usepackage{verbatim} % adds environ_x,n_yent for commenting out blocks of text & for better verbatim
+\usepackage{subfig} % make it possible to include more than one captioned figure/table in a single float
+% These packages are all incorporated in the memoir class to one degree or another...
+\usepackage{amsmath}
+%%% HEADERS & FOOTERS
+\usepackage{fancyhdr} % This should be set AFTER setting up the page geometry
+\pagestyle{fancy} % options: empty , plain , fancy
+\renewcommand{\headrulewidth}{0pt} % customise the layout...
+\lhead{}\chead{}\rhead{}
+\lfoot{}\cfoot{\thepage}\rfoot{}
+
+%%% SECTION TITLE APPEARANCE
+\usepackage{sectsty}
+\allsectionsfont{\sffamily\mdseries\upshape} % (See the fntguide.pdf for font help)
+% (This matches ConTeXt defaults)
+
+%%% ToC (table of contents) APPEARANCE
+\usepackage[nottoc,notlof,notlot]{tocbibind} % Put the bibliography in the ToC
+\usepackage[titles,subfigure]{tocloft} % Alter the style of the Table of Contents
+\renewcommand{\cftsecfont}{\rmfamily\mdseries\upshape}
+\renewcommand{\cftsecpagefont}{\rmfamily\mdseries\upshape} % No bold!
+
+%%% END Article customizations
+
+%%% The "real" document content comes below...
+
+\title{Physics 465: Computing Project 8 (due T34, 11/14)}
+
+%\author{Steve Spicklemire}
+%\date{Aug. 7, 2011} % Activate to display a given date or no date (if empty),
+         % otherwise the current date is printed 
+
+\begin{document}
+\maketitle
+
+\section*{Particle in a 2-D box (Infinite 2-D Square Well)}
+
+In this project we're going to broaden our world to include two dimensions of space. Let's say we have a particle in a 2-D square box of side $a$ and a potential that goes to infinity at the sides/boundaries of the box so that the wavefunction has to go to zero there. What happens if we start the particle out in one corner? How long does it take for the probability distribution to ``revive'' in that corner? Let's work it out, and then simulate that situation in python.
+
+\subsection*{1) SWE in 2-D using cartesian coordinates}
+
+In two dimensions momentum can be described as a 2-D vector:
+
+\begin{equation}
+\vec{p} = p_x\hat{i} + p_y\hat{j}
+\end{equation}
+
+Generalizing the stationary state wavefunction to two dimensions is also straightforward: 
+
+\begin{equation}
+\braket{\vec{r}|\psi} = \psi(\vec{r}) = \psi(x, y)
+\end{equation}
+
+What happens to the time independent Schr\"odinger wave equation (TISWE)? It's still the same!
+
+\begin{equation}
+\hat{H}\ket{\psi_n} = E_n \ket{\psi_n}
+\end{equation}
+
+Where $\ket{\psi_n}$ is an eigenstate of $\hat{H}$ with eigenvalue $E_n$, which in the position representation becomes:
+
+\begin{equation}
+\frac{\hat{p}^2}{2m}\psi_n(\vec{r}) + V(\vec{r})\psi_n(\vec{r}) = E_n \psi_n(\vec{r})
+\label{eq:TISE}
+\end{equation}
+
+How shall we generalize $\hat{p}$? Easy! Again in the position representation: $\hat{p}_x = -i\hbar \partial/\partial x$ and $\hat{p}_y = -i\hbar \partial/\partial y$. Putting these back into Eq.~\ref{eq:TISE}
+
+\begin{equation}
+-\frac{\hbar^2}{2m}(\frac{\partial^2}{\partial x^2} + \frac{\partial^2}{\partial y^2})\psi_n(x,y) + V(x,y)\psi_n(x,y) = E_n \psi_n(x,y)
+\label{eq:TISE-detail}
+\end{equation}
+
+Since our ``box'' potential is zero everywhere except at the  boundaries, we can separate $\psi(x,y)$ into parts that only depend on $x$ and $y$ separately: $\psi_x(x)$ and $\psi_y(y)$. Then we get {\it two} eigenvalue equations for those two parts:
+
+\begin{eqnarray}
+-\frac{\hbar^2}{2m}\psi''_{n_x}(x) = E_{n_x} \psi_{n_x}(x)\\
+-\frac{\hbar^2}{2m}\psi''_{n_y}(y) = E_{n_y} \psi_{n_y}(y)
+\end{eqnarray}
+
+Note that this is just like {\it two} 1-D infinite square wells! So we already know the solutions:
+
+\begin{eqnarray}
+\psi_{n_x}(x) & = & \sqrt{\frac{2}{a}}\sin(\frac{n_x\pi x}{a})\\
+\psi_{n_y}(y) & = & \sqrt{\frac{2}{a}}\sin(\frac{n_y\pi y}{a})
+\end{eqnarray}
+
+Note here that there are {\it two} eigenvalues, one for each dimension. So rather than just $\ket{\psi_n}$, we'll need to consider $n_x$ and $n_y$ to completely specify the overall state $\ket{\psi_{n_x,n_y}}$. The actual overall wavefunction is just the product of the two separate wavefunctions:
+
+\begin{equation}
+\psi_{n_xn_y}(x,y) = \frac{2}{a}\sin(\frac{n_x\pi x}{a})\sin(\frac{n_y\pi y}{a})
+\label{eq:Solution-swe}
+\end{equation}
+
+Substituting these solutions back into Eq.~\ref{eq:TISE} gives:
+
+\begin{equation}
+E_{n_x,n_y} = \frac{\hbar^2 \pi^2}{2ma^2}(n_x^2 + n_y^2)
+\end{equation}
+
+These are the energies used to predict the time evolution of the wavefunction given the fourier coefficients.
+
+\begin{equation}
+\Psi(x, y, t) = \bra{xy} e^{-i\frac{\hat{H}}{\hbar} t} \sum_{n_x,n_y} \ket{n_x,n_y}\braket{n_x,n_y|\psi(0)} = \sum_{n_x,n_y} c_{n_x,n_y} \psi_{n_x,n_y}(x,y) e^{-i\frac{E_{n_x,n_y}}{\hbar} t}
+\end{equation}
+
+where the fourier coefficients are computing in the ``regular'' way:
+
+\begin{eqnarray}
+c_{n_x,n_y} & = & \braket{\psi_{n_x,n_y}|\psi(0)}\\
+c_{n_x,n_y} & = & \int \frac{2}{a}\sin(\frac{n_x\pi x}{a})\sin(\frac{n_y\pi y}{a}) \psi_0(x,y)\,dx\,dy
+\end{eqnarray}
+
+
+\subsection*{Representing 2-D wavefunctions in 3-D space}
+
+We got away with representing 1-D wavefunctions in 3-D using one dimension for {\it real} space and using the other two for the real and imaginary parts of the wavefunction. If we move to using up two dimensions on real space, we don't have enough dimensions left over for the real and imaginary parts of $\psi(x,y)$!
+
+So.. how do we do it? I've played around with several representations of the imaginary part, and this is the one I like the best: Rather than arrows, use cylinders to represent the wavefunction in 2-D. For the real part, use the height above the plane. For the imaginary part use the radius of the cylinder for the magnitude, and the color for the sign. Fig.~\ref{fig:(2,1)state} is a screen shot of the look of the $nx=2$ and $ny=1$ state alone:
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=4in]{screen1.png} 
+   \caption{(nx=2, ny=1) state at one point in time}
+   \label{fig:(2,1)state}
+\end{figure}
+
+Here is the modified ``safcnP8.py'' file that handles this case:
+
+\begin{verbatim}
+from visual import color
+
+def SetArrowFromCN( cn, a):
+    """
+    SetArrowWithCN takes a complex number `cn' and an object `a' .
+    This version assumes `a' is a cylinder and sets the height of
+    the cylinder based on the real part, and the color/radius based
+    on the imaginary part. The radius is never set to less than 5% of the 
+    magnitude of the complex number.
+
+    """
+    a.axis.z = cn.real
+    a.radius = max(0.05*abs(cn), abs(cn.imag)/6.0)
+    if cn.imag<0:
+        a.color=color.blue
+    else:
+        a.color=color.red
+        
+\end{verbatim}
+
+\subsection*{2) Initializing a 2-D array to represent wavefunctions}
+
+There are a few python tricks we'll need to make this easy. One is an easy way to set up 2-D arrays for computing 2-D wavefunctions. Let's say we want to define a wavefunction over a 2-D area where $x$ goes from $0$ to $a$, and $y$ goes from $0$ to $a$ as well (obviously a square area!). We'd like to be able to write something like:
+
+\begin{verbatim}
+
+psinxny = sin(nx*pi*x/a)*sin(ny*pi*y/a)          # compute the nx,ny energy eigenstate
+psinxny = psinxny/sqrt((abs(psinxny)**2).sum())  # normalize it.
+
+\end{verbatim}
+
+and have {\tt psinxny} be a 2-D array with the values of the wavefunction. For this to work, {\tt x} needs to be a 2-D array with appropriate $x$ values and {\tt y} needs to be a similar array with the appropriate $y$ values. One easy way to get this is to use the numpy {\tt mgrid} constructor. The {\tt mgrid} constructor takes index-like objects and uses them to create a set of grid arrays that do what we need. Here's the way it works:
+
+\begin{verbatim}
+x, y = mgrid[0:NA:NA*1j, 0:NA:NA*1j]*(a/NA) # trick to make x and y arrays
+
+\end{verbatim}
+
+This example makes an {\tt x} grid and a {\tt y} grid, which are really just 2-D arrays, that hold $x$ and $y$ values respectively. The $x$ and $y$ values go from $0$ to $a$ and there are {\tt NA} of them. It's sort of like {\tt linspace}, but in two dimensions.
+
+\subsection*{3) Managing eigenstates and related information}
+
+Another trick is that of using a dictionary to hold a set of arrays that we can use as eigenfunctions. We could of course use an array of arrays, as we've done before, but I wanted to have a flexible way of specifying exactly which eigenstates I wanted to work with as a pair of lists of $nx$ and $ny$ values. A dictionary is an ideal way to do this. It's basically a mapping type that takes a set of `keys', and associates them with an object (in this case an array). Our `keys' will be the tuples (nx, ny) and the objects will be the normalized eigenfunctions that correspond to that key. It's easy to set up like this:
+
+\begin{verbatim}
+# compute the eigenstates and store them in a dictionary 'eigenstates'
+
+NX=[1,2,3,5,6,7]               # which fourier terms in x direction
+NY=[1,2,3,5,6,7]               # which fourier terms in y direction
+
+eigenstates = {}               # dictionary for precomputed eigenstates
+
+for nx in NX:
+    for ny in NY:
+        psinxny = sin(nx*pi*x/a)*sin(ny*pi*y/a)                # the nx,ny eigenstate
+        psinxny = psinxny/sqrt((abs(psinxny)**2).sum())        # normalize it.
+        eigenstates[(nx, ny)] = psinxny                        # save it
+
+\end{verbatim}
+
+This same trick can be used to keep track of fourier coefficients and energies for each term in a very similar way.
+
+\subsection*{4) So... what are we supposed to do?}
+
+Your mission is to produce two deliverables:
+
+1) A screenshot of the wavefunction representation evolving in the (2,1) state. It should look something like Fig.~\ref{fig:evolvedstate}.
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=5in]{screen2.png} 
+   \caption{2-D representation of $\braket{\vec{r}|\psi(0)}$ much later than $t=0$.}
+   \label{fig:evolvedstate}
+\end{figure}
+
+2) A graph of the probability of finding the particle in the lower left corner, which should look something like Fig.~\ref{fig:graph}
+\begin{eqnarray}
+0 \le x\le a/2\\
+0 \le y\le a/2
+\end{eqnarray}
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=5in]{graph.png} 
+   \caption{Probability of being in lower left corner vs. time}
+   \label{fig:graph}
+\end{figure}
+
+There is a ``Starter Program'' on the `K' drive (cp8.py) that you can use to get started.
+
+\subsection*{Questions}
+
+Please include your answers to these questions in your report.
+
+1) Using the theory from section 1, predict the time it takes for the system to `revive' to it's initial state. Show that this prediction corresponds to the apparent revival time on your graph from section 4.
+
+2) Unlike the 1-D infinite square well, the frequencies of the excited states in the 2-D case are not integer multiples of the lowest energy eigenstate. What affect does this fact have on the revival time?
+
+\end{document}

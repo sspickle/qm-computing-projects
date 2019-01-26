@@ -14,7 +14,7 @@ or with platform specific environments:
 
     conda env create -f win-environment.yml (on Windows)
 
-
+    conda env create -f mac-environment.yml (on Mac)
 
 Then activate the environment using:
 

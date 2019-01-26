@@ -1,4 +1,4 @@
-name: vpy
+name: vpenv
 channels:
   - vpython
   - defaults
@@ -83,5 +83,5 @@ dependencies:
   - autobahn=19.1.1=py_0
   - txaio=18.8.1=py_0
   - vpython=7.4.7=py37_0
-prefix: D:\Users\spicklemire\AppData\Local\Continuum\miniconda3\envs\vpy
+
 

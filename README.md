@@ -8,11 +8,13 @@ You can run many of these projects with no installation:
 
 The easiest way to get things going is with anaconda:
 
-    conda env create -f environment.yml (on a Mac)
+    conda env create -f environment.yml
 
-or
+or with platform specific environments:
 
     conda env create -f win-environment.yml (on Windows)
+
+
 
 Then activate the environment using:
 

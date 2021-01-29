@@ -1,17 +1,17 @@
 """
 
-Copyright (c) 2011, Steve Spicklemire
+Copyright (c) 2011, Steve Snp.picklemire
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the
 "Software"), to deal in the Software without restriction, including
 without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
+distribute, sublicense, and/or sell conp.pies of the Software, and to
 permit persons to whom the Software is furnished to do so, subject to
 the following conditions:
 
 The above copyright notice and this permission notice shall be included
-in all copies or substantial portions of the Software.
+in all conp.pies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
@@ -22,7 +22,8 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 """
-from vpython import *
+import vpython as vp
+import numpy as np
 
 class PhasorModel:
     """
@@ -35,9 +36,9 @@ class PhasorModel:
         self.state = state
         self.k = k
         self.phaseToColor = phaseToColor
-        self.slist = [(arrow(pos=vec(x,0,0), shaftwidth=0.001, color=color.red, axis=vec(0,.1,0),opacity=1, visible=True),
-                       arrow(pos=vec(x,0,0), shaftwidth=0.001, color=color.green, axis=vec(0,.1,0),opacity=1, visible=False),
-                       arrow(pos=vec(x,0,0), shaftwidth=0.001, color=color.blue, axis=vec(0,.1,0),opacity=1, visible=False),
+        self.slist = [(vp.arrow(pos=vp.vec(x,0,0), shaftwidth=0.001, color=vp.color.red, axis=vp.vec(0,.1,0),opacity=1, visible=True),
+                       vp.arrow(pos=vp.vec(x,0,0), shaftwidth=0.001, color=vp.color.green, axis=vp.vec(0,.1,0),opacity=1, visible=False),
+                       vp.arrow(pos=vp.vec(x,0,0), shaftwidth=0.001, color=vp.color.blue, axis=vp.vec(0,.1,0),opacity=1, visible=False),
                        ) for x in xarray]
         
     def update(self, t):
@@ -50,10 +51,10 @@ class PhasorModel:
             s3.axis.y = 0.0
             s3.axis.z = psi.imag
             if self.phaseToColor:
-                phase1 = arctan2(psi.imag, psi.real)
+                phase1 = np.arctan2(psi.imag, psi.real)
                 if phase1 < 0.0:
-                    phase1 += 2*pi
-                s1.color = color.hsv_to_rgb((1.0 - phase1/(2*pi),1.0,1.0))
+                    phase1 += 2*np.pi
+                s1.color = vp.color.hsv_to_rgb((1.0 - phase1/(2*np.pi),1.0,1.0))
             
     def toggleVisible(self, index):
         for s in self.slist:
@@ -70,10 +71,10 @@ class TravellingWaveModel:
         self.state = state
         self.k = k
         self.phaseToColor = phaseToColor
-        self.slist = [(arrow(pos=vec(x,0,0), shaftwidth=0.001, color=color.red, axis=vec(0,.1,0),opacity=1, visible=True),
-                       arrow(pos=vec(x,0,0), shaftwidth=0.001, color=color.green, axis=vec(0,.1,0),opacity=1, visible=False),
-                       arrow(pos=vec(x,0,0), shaftwidth=0.001, color=color.blue, axis=vec(0,.1,0),opacity=1, visible=False),
-                       cylinder(pos=vec(x,0,0), radius=.1, color=color.green, axis=vec(L/N,0,0),opacity=1, visible=False),
+        self.slist = [(vp.arrow(pos=vp.vec(x,0,0), shaftwidth=0.001, color=vp.color.red, axis=vp.vec(0,.1,0),opacity=1, visible=True),
+                       vp.arrow(pos=vp.vec(x,0,0), shaftwidth=0.001, color=vp.color.green, axis=vp.vec(0,.1,0),opacity=1, visible=False),
+                       vp.arrow(pos=vp.vec(x,0,0), shaftwidth=0.001, color=vp.color.blue, axis=vp.vec(0,.1,0),opacity=1, visible=False),
+                       vp.cylinder(pos=vp.vec(x,0,0), radius=.1, color=vp.color.green, axis=vp.vec(L/N,0,0),opacity=1, visible=False),
                        
                        ) for x in xarray]
         
@@ -96,16 +97,16 @@ class TravellingWaveModel:
             if self.phaseToColor:
                 phase1 = arctan2(psi1.imag, psi1.real)
                 if phase1 < 0.0:
-                    phase1 += 2*pi
+                    phase1 += 2*np.pi
                 phase2 = arctan2(psi2.imag, psi2.real)
                 if phase2 < 0.0:
-                    phase2 += 2*pi
+                    phase2 += 2*np.pi
                 phase = arctan2(psi.imag, psi.real)
                 if phase < 0.0:
-                    phase += 2*pi
-                s1.color = color.hsv_to_rgb((1.0 - phase1/(2*pi),1.0,1.0))
-                s2.color = color.hsv_to_rgb((1.0 - phase2/(2*pi),1.0,1.0))
-                s3.color = color.hsv_to_rgb((1.0 - phase/(2*pi),1.0,1.0))
+                    phase += 2*np.pi
+                s1.color = vp.color.hsv_to_rgb((1.0 - phase1/(2*np.pi),1.0,1.0))
+                s2.color = vp.color.hsv_to_rgb((1.0 - phase2/(2*np.pi),1.0,1.0))
+                s3.color = vp.color.hsv_to_rgb((1.0 - phase/(2*np.pi),1.0,1.0))
             
     def toggleVisible(self, index):
         for s in self.slist:
@@ -121,10 +122,10 @@ class TwoStateModel:
         L=xarray[-1]-xarray[0]
         N=len(xarray)
         self.state = state
-        self.slist = [(arrow(pos=vec(x,0,0), shaftwidth=0.001, color=color.red, axis=vec(0,.1,0),opacity=1, visible=True),
-                       arrow(pos=vec(x,0,0), shaftwidth=0.001, color=color.green, axis=vec(0,.1,0),opacity=1, visible=False),
-                       arrow(pos=vec(x,0,0), shaftwidth=0.001, color=color.blue, axis=vec(0,.1,0),opacity=1, visible=False),
-                       cylinder(pos=vec(x,0,0), radius=.1, color=color.green, axis=vec(L/N,0,0),opacity=1, visible=False),
+        self.slist = [(vp.arrow(pos=vp.vec(x,0,0), shaftwidth=0.001, color=vp.color.red, axis=vp.vec(0,.1,0),opacity=1, visible=True),
+                       vp.arrow(pos=vp.vec(x,0,0), shaftwidth=0.001, color=vp.color.green, axis=vp.vec(0,.1,0),opacity=1, visible=False),
+                       vp.arrow(pos=vp.vec(x,0,0), shaftwidth=0.001, color=vp.color.blue, axis=vp.vec(0,.1,0),opacity=1, visible=False),
+                       vp.cylinder(pos=vp.vec(x,0,0), radius=.1, color=vp.color.green, axis=vp.vec(L/N,0,0),opacity=1, visible=False),
                        
                        ) for x in xarray]
         
@@ -167,15 +168,15 @@ class SHOSupDemo:
         self.xarray = xarray
         self.state = state
         self.Nterms=Nterms
-        self.slist = [(arrow(pos=vec(x,0,0), shaftwidth=0.01, color=color.red, axis=vec(0,.1,0),opacity=1, visible=True),
-                       arrow(pos=vec(x,0,0), shaftwidth=0.01, color=color.green, axis=vec(0,.1,0),opacity=1, visible=False),
-                       arrow(pos=vec(x,0,0), shaftwidth=0.01, color=color.blue, axis=vec(0,.1,0),opacity=1, visible=False),
-                       arrow(pos=vec(x,0,0), shaftwidth=0.01, color=color.yellow, axis=vec(0,.1,0),opacity=1, visible=False),
-                       arrow(pos=vec(x,0,0), shaftwidth=0.01, color=color.cyan, axis=vec(0,.1,0),opacity=1, visible=False),
-                       arrow(pos=vec(x,0,0), shaftwidth=0.01, color=color.gray(0.7), axis=vec(0,.1,0),opacity=1, visible=False),
-                       arrow(pos=vec(x,0,0), shaftwidth=0.01, color=color.magenta, axis=vec(0,.1,0),opacity=1, visible=False),
-                       arrow(pos=vec(x,0,0), shaftwidth=0.01, color=color.orange, axis=vec(0,.1,0),opacity=1, visible=False),
-                       cylinder(pos=vec(x,0,0), radius=.1, color=color.yellow, axis=vec(L/N,0,0),opacity=1, visible=False)
+        self.slist = [(vp.arrow(pos=vp.vec(x,0,0), shaftwidth=0.01, color=vp.color.red, axis=vp.vec(0,.1,0),opacity=1, visible=True),
+                       vp.arrow(pos=vp.vec(x,0,0), shaftwidth=0.01, color=vp.color.green, axis=vp.vec(0,.1,0),opacity=1, visible=False),
+                       vp.arrow(pos=vp.vec(x,0,0), shaftwidth=0.01, color=vp.color.blue, axis=vp.vec(0,.1,0),opacity=1, visible=False),
+                       vp.arrow(pos=vp.vec(x,0,0), shaftwidth=0.01, color=vp.color.yellow, axis=vp.vec(0,.1,0),opacity=1, visible=False),
+                       vp.arrow(pos=vp.vec(x,0,0), shaftwidth=0.01, color=vp.color.cyan, axis=vp.vec(0,.1,0),opacity=1, visible=False),
+                       vp.arrow(pos=vp.vec(x,0,0), shaftwidth=0.01, color=vp.color.gray(0.7), axis=vp.vec(0,.1,0),opacity=1, visible=False),
+                       vp.arrow(pos=vp.vec(x,0,0), shaftwidth=0.01, color=vp.color.magenta, axis=vp.vec(0,.1,0),opacity=1, visible=False),
+                       vp.arrow(pos=vp.vec(x,0,0), shaftwidth=0.01, color=vp.color.orange, axis=vp.vec(0,.1,0),opacity=1, visible=False),
+                       vp.cylinder(pos=vp.vec(x,0,0), radius=.1, color=vp.color.yellow, axis=vp.vec(L/N,0,0),opacity=1, visible=False)
                        ) for x in xarray]
                        
     def SetArrowFromCN(self, cn, a):
@@ -192,7 +193,7 @@ class SHOSupDemo:
                     self.visible.append(stuple[i].visible)
                 self.SetArrowFromCN(self.state(i,j,t), stuple[i])
                 
-        psiNet = zeros(len(self.xarray),complex)
+        psiNet = np.zeros(len(self.xarray),complex)
         for i in range(self.Nterms):
             if i<len(self.visible) and self.visible[i]:
                 psiNet += self.state(i, -1, t)
@@ -247,15 +248,15 @@ class SqWellSupDemo:
         self.xarray = xarray
         self.state = state
         self.Nterms=Nterms
-        self.slist = [(arrow(pos=vec(x-L/2,0,0), shaftwidth=0.001, color=color.red, axis=vec(0,.1,0),opacity=1, visible=True),
-                       arrow(pos=vec(x-L/2,0,0), shaftwidth=0.001, color=color.green, axis=vec(0,.1,0),opacity=1, visible=False),
-                       arrow(pos=vec(x-L/2,0,0), shaftwidth=0.001, color=color.blue, axis=vec(0,.1,0),opacity=1, visible=False),
-                       arrow(pos=vec(x-L/2,0,0), shaftwidth=0.001, color=color.yellow, axis=vec(0,.1,0),opacity=1, visible=False),
-                       arrow(pos=vec(x-L/2,0,0), shaftwidth=0.001, color=color.cyan, axis=vec(0,.1,0),opacity=1, visible=False),
-                       arrow(pos=vec(x-L/2,0,0), shaftwidth=0.001, color=color.gray(0.7), axis=vec(0,.1,0),opacity=1, visible=False),
-                       arrow(pos=vec(x-L/2,0,0), shaftwidth=0.001, color=color.magenta, axis=vec(0,.1,0),opacity=1, visible=False),
-                       arrow(pos=vec(x-L/2,0,0), shaftwidth=0.001, color=color.orange, axis=vec(0,.1,0),opacity=1, visible=False),
-                       cylinder(pos=vec(x-L/2,0,0), radius=.1, color=color.yellow, axis=vec(L/N,0,0),opacity=1, visible=False)
+        self.slist = [(vp.arrow(pos=vp.vec(x-L/2,0,0), shaftwidth=0.001, color=vp.color.red, axis=vp.vec(0,.1,0),opacity=1, visible=True),
+                       vp.arrow(pos=vp.vec(x-L/2,0,0), shaftwidth=0.001, color=vp.color.green, axis=vp.vec(0,.1,0),opacity=1, visible=False),
+                       vp.arrow(pos=vp.vec(x-L/2,0,0), shaftwidth=0.001, color=vp.color.blue, axis=vp.vec(0,.1,0),opacity=1, visible=False),
+                       vp.arrow(pos=vp.vec(x-L/2,0,0), shaftwidth=0.001, color=vp.color.yellow, axis=vp.vec(0,.1,0),opacity=1, visible=False),
+                       vp.arrow(pos=vp.vec(x-L/2,0,0), shaftwidth=0.001, color=vp.color.cyan, axis=vp.vec(0,.1,0),opacity=1, visible=False),
+                       vp.arrow(pos=vp.vec(x-L/2,0,0), shaftwidth=0.001, color=vp.color.gray(0.7), axis=vp.vec(0,.1,0),opacity=1, visible=False),
+                       vp.arrow(pos=vp.vec(x-L/2,0,0), shaftwidth=0.001, color=vp.color.magenta, axis=vp.vec(0,.1,0),opacity=1, visible=False),
+                       vp.arrow(pos=vp.vec(x-L/2,0,0), shaftwidth=0.001, color=vp.color.orange, axis=vp.vec(0,.1,0),opacity=1, visible=False),
+                       vp.cylinder(pos=vp.vec(x-L/2,0,0), radius=.1, color=vp.color.yellow, axis=vp.vec(L/N,0,0),opacity=1, visible=False)
                        ) for x in xarray]
                        
     def SetArrowFromCN(self, cn, a):
@@ -268,7 +269,7 @@ class SqWellSupDemo:
             for i in range(7):
                 self.SetArrowFromCN(self.state(i+1,stuple[0].pos.x,t), stuple[i])
                 
-        psiNet = zeros(len(self.xarray),'d')*(1.0+0j)
+        psiNet = np.zeros(len(self.xarray),'d')*(1.0+0j)
         for i in range(self.Nterms):
             if self.slist[0][i].visible:
                 psiNet += self.state(i+1, self.xarray-self.L/2.0, t)
@@ -291,10 +292,10 @@ class TwoStateModelDemo:
         L=xarray[-1]-xarray[0]
         N=len(xarray)
         self.state = state
-        self.slist = [(arrow(pos=vec(x-L/2,0,0), shaftwidth=0.001, color=color.red, axis=vec(0,.1,0),opacity=1, visible=True),
-                       arrow(pos=vec(x-L/2,0,0), shaftwidth=0.001, color=color.green, axis=vec(0,.1,0),opacity=1, visible=False),
-                       arrow(pos=vec(x-L/2,0,0), shaftwidth=0.001, color=color.blue, axis=vec(0,.1,0),opacity=1, visible=False),
-                       cylinder(pos=vec(x-L/2,0,0), radius=.1, color=color.green, axis=vec(L/N,0,0),opacity=1, visible=False),
+        self.slist = [(vp.arrow(pos=vp.vec(x-L/2,0,0), shaftwidth=0.001, color=vp.color.red, axis=vp.vec(0,.1,0),opacity=1, visible=True),
+                       vp.arrow(pos=vp.vec(x-L/2,0,0), shaftwidth=0.001, color=vp.color.green, axis=vp.vec(0,.1,0),opacity=1, visible=False),
+                       vp.arrow(pos=vp.vec(x-L/2,0,0), shaftwidth=0.001, color=vp.color.blue, axis=vp.vec(0,.1,0),opacity=1, visible=False),
+                       vp.cylinder(pos=vp.vec(x-L/2,0,0), radius=.1, color=vp.color.green, axis=vp.vec(L/N,0,0),opacity=1, visible=False),
                        
                        ) for x in xarray]
         
@@ -331,8 +332,8 @@ class WaveFunctionRep:
     def __init__(self, xarray):
         L=xarray[-1]-xarray[0]
         N=len(xarray)
-        self.slist = [(arrow(pos=vec(x,0,0), shaftwidth=0.0001, color=color.red, axis=vec(0,.01,0),opacity=1),
-                       cylinder(pos=vec(x,0,0), radius=.01, color=color.green, axis=vec(L/N,0,0),opacity=1),
+        self.slist = [(vp.arrow(pos=vp.vec(x,0,0), shaftwidth=0.0001, color=vp.color.red, axis=vp.vec(0,.01,0),opacity=1),
+                       vp.cylinder(pos=vp.vec(x,0,0), radius=.01, color=vp.color.green, axis=vp.vec(L/N,0,0),opacity=1),
                        ) for x in xarray]
         
     def update(self, psi):
